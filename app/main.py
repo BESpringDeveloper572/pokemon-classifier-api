@@ -51,6 +51,27 @@ async def root(api_key: Annotated[str, Depends(verify_api_key)]):
         "metadata_loaded": len(pokemon_metadata) > 0
     }
 
+@app.get("/pokemon/{name}")
+async def get_pokemon_by_name(name: str):
+    """
+    Get Pokémon details by name.
+    """
+    name_cap = name.capitalize()
+    info = pokemon_metadata.get(name_cap)
+    
+    if info:
+        return {
+            "pokemon": name_cap,
+            "id": info.get("id"),
+            "types": info.get("types"),
+            "description": info.get("description")
+        }
+    else:
+        return {
+            "pokemon": name_cap,
+            "info": "Metadata not found. Run the fetch script to populate data."
+        }
+
 @app.post(
     "/classify",
     responses={
