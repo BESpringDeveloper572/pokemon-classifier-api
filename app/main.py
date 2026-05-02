@@ -19,30 +19,20 @@ app = FastAPI(
 )
 
 # --- SECURITY (FROM ENVIRONMENT) ---
-# Get allowed MACs as a list (comma-separated in .env)
-ALLOWED_MACS = os.getenv("ALLOWED_3DS_MACS", "DEBUG_MAC").split(",")
 API_KEY = os.getenv("POKEMON_API_KEY", "CHANGEME_PLEASE")
 
-def verify_device(
-    x_3ds_mac: str = Header(None),
+def verify_api_key(
     x_api_key: str = Header(None)
 ):
-    """Security dependency to check for both the 3DS MAC address and API Key."""
-    # 1. Check MAC Address
-    if not x_3ds_mac:
-        raise HTTPException(status_code=401, detail="Unauthorized: Missing X-3DS-MAC header.")
-    
-    if x_3ds_mac not in ALLOWED_MACS:
-        raise HTTPException(status_code=403, detail="Forbidden: Device not whitelisted.")
-    
-    # 2. Check API Key
+    """Security dependency to check for the API Key."""
+    # Check API Key
     if not x_api_key:
         raise HTTPException(status_code=401, detail="Unauthorized: Missing X-API-KEY header.")
     
     if x_api_key != API_KEY:
         raise HTTPException(status_code=403, detail="Forbidden: Invalid API Key.")
     
-    return x_3ds_mac
+    return x_api_key
 
 # --- METADATA LOADING ---
 METADATA_PATH = os.path.join(os.path.dirname(__file__), "data", "pokemon_info.json")
@@ -53,10 +43,9 @@ if os.path.exists(METADATA_PATH):
         pokemon_metadata = json.load(f)
 
 @app.get("/")
-async def root(mac: Annotated[str, Depends(verify_device)]):
+async def root(api_key: Annotated[str, Depends(verify_api_key)]):
     return {
         "message": "Welcome to the Pokémon Classifier API!",
-        "device": mac,
         "docs": "/docs",
         "model": pokemon_classifier.model_name,
         "metadata_loaded": len(pokemon_metadata) > 0
