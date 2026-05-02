@@ -6,23 +6,19 @@ from typing import Annotated
 from PIL import Image
 from dotenv import load_dotenv
 from fastapi import FastAPI, UploadFile, File, HTTPException, Header, Depends
+from fastapi.security import APIKeyHeader
 
 from .model import pokemon_classifier
 
 # Load environment variables from .env file
 load_dotenv()
 
-app = FastAPI(
-    title="Pokémon Classifier API",
-    description="A REST API to classify Pokémon from images using a Vision Transformer (ViT) model.",
-    version="1.0.0"
-)
-
 # --- SECURITY (FROM ENVIRONMENT) ---
 API_KEY = os.getenv("POKEMON_API_KEY", "CHANGEME_PLEASE")
+api_key_header = APIKeyHeader(name="X-API-KEY", auto_error=False)
 
 def verify_api_key(
-    x_api_key: str = Header(None)
+    x_api_key: str = Depends(api_key_header)
 ):
     """Security dependency to check for the API Key."""
     # Check API Key
@@ -34,6 +30,13 @@ def verify_api_key(
     
     return x_api_key
 
+app = FastAPI(
+    title="Pokémon Classifier API",
+    description="A REST API to classify Pokémon from images using a Vision Transformer (ViT) model.",
+    version="1.0.0",
+    dependencies=[Depends(verify_api_key)]
+)
+
 # --- METADATA LOADING ---
 METADATA_PATH = os.path.join(os.path.dirname(__file__), "data", "pokemon_info.json")
 pokemon_metadata = {}
@@ -43,7 +46,7 @@ if os.path.exists(METADATA_PATH):
         pokemon_metadata = json.load(f)
 
 @app.get("/")
-async def root(api_key: Annotated[str, Depends(verify_api_key)]):
+async def root():
     return {
         "message": "Welcome to the Pokémon Classifier API!",
         "docs": "/docs",
@@ -81,7 +84,7 @@ async def get_pokemon_by_name(name: str):
 )
 # file: UploadFile = File(...)
 async def classify_image(
-    file: Annotated[UploadFile, Depends(File(...))]
+    file: Annotated[UploadFile, File(...)]
 ):
     """
     Classify a Pokémon from an uploaded image and return its details.
