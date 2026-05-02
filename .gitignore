@@ -25,3 +25,5 @@ app/data/pokemon_info.json
 # OS
 .DS_Store
 Thumbs.db
+
+GEMINI.md
