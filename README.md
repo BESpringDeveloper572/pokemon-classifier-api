@@ -1,11 +1,12 @@
 # Pokémon Classifier REST API
 
-A REST API that uses a Vision Transformer (ViT) model (`skshmjn/Pokemon-classifier-gen9-1025`) to classify Pokémon from uploaded images.
+A REST API that uses a Vision Transformer (ViT) model (`skshmjn/Pokemon-classifier-gen9-1025`) to classify Pokémon from uploaded images and retrieve metadata.
 
 ## Features
 - **FastAPI**: Modern, fast web framework.
 - **Vision Transformer**: High-accuracy classification.
 - **Gen 9 Support**: Classifies up to 1,025 different Pokémon.
+- **Metadata Lookup**: Retrieve Pokémon details by name or image.
 
 ## Installation
 
@@ -16,13 +17,19 @@ A REST API that uses a Vision Transformer (ViT) model (`skshmjn/Pokemon-classifi
 
 2.  **Create a virtual environment**:
     ```bash
-    python -m venv venv
-    source venv/bin/activate  # On Windows: venv\Scripts\activate
+    python -m venv .venv
+    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
     ```
 
 3.  **Install dependencies**:
     ```bash
     pip install -r requirements.txt
+    ```
+
+4.  **Configure Environment**:
+    Create a `.env` file in the root directory:
+    ```env
+    POKEMON_API_KEY=your_secret_api_key
     ```
 
 ## Running the API
@@ -33,23 +40,15 @@ Start the server using `uvicorn`:
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-- **Health Check**: `GET http://localhost:8000/`
+- **Health Check**: `GET http://localhost:8000/` (Requires `X-API-KEY`)
 - **Swagger Documentation**: `http://localhost:8000/docs`
 
-## Running in PyCharm
+## Authentication
 
-1. **Open Project**: Open the `pokemon-classifier-api` folder in PyCharm.
-2. **Configure Interpreter**:
-   - Go to `Settings` > `Project: pokemon-classifier-api` > `Python Interpreter`.
-   - Click `Add Interpreter` > `Add Local Interpreter...`.
-   - Select `System Interpreter` and ensure it points to the Python version where you installed the requirements (usually `/usr/bin/python3` or similar).
-   - If you see a warning about `uvicorn` not found, make sure the interpreter path matches the one where `pip install` was run.
-3. **Create Run Configuration**:
-   - Click `Add Configuration...` in the top right.
-   - Click `+` and select `FastAPI`.
-   - **Application**: Select `app/main.py`.
-   - **Uvicorn Options**: Add `--host 0.0.0.0 --port 8000 --reload`.
-   - Click `OK` and then the green "Run" arrow.
+The API uses header-based authentication for specific endpoints (like the health check).
+
+- **Header**: `X-API-KEY`
+- **Value**: The key defined in your `.env` file (defaults to `CHANGEME_PLEASE` if not set).
 
 ## Fetching Pokémon Metadata
 
@@ -67,7 +66,8 @@ python scripts/fetch_pokemon_data.py
 
 ## Usage
 
-### Using `curl`
+### Classify an Image
+`POST /classify`
 
 ```bash
 curl -X POST "http://localhost:8000/classify" \
@@ -75,10 +75,19 @@ curl -X POST "http://localhost:8000/classify" \
      -F "file=@/path/to/your/pokemon_image.png"
 ```
 
-### Using the Swagger UI
-1. Navigate to `http://localhost:8000/docs`.
-2. Find the `/classify` endpoint.
-3. Click "Try it out", upload an image, and click "Execute".
+### Get Pokémon Details by Name
+`GET /pokemon/{name}`
+
+```bash
+curl -X GET "http://localhost:8000/pokemon/pikachu"
+```
+
+### Health Check (Authenticated)
+`GET /`
+
+```bash
+curl -H "X-API-KEY: your_secret_api_key" http://localhost:8000/
+```
 
 ## Model Details
-The API uses the `skshmjn/Pokemon-classifier-gen9-1025` model from Hugging Face, which is a fine-tuned Vision Transformer (ViT). It returns the top 5 most likely Pokémon for each uploaded image.
+The API uses the `skshmjn/Pokemon-classifier-gen9-1025` model from Hugging Face, which is a fine-tuned Vision Transformer (ViT). It returns the top Pokémon prediction enriched with metadata from the local cache.
