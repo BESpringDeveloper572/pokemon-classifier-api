@@ -6,7 +6,8 @@ import torch
 class PokemonClassifier:
     def __init__(self, model_name="skshmjn/Pokemon-classifier-gen9-1025"):
         self.hub_model_name = model_name
-        self.local_model_path = os.path.join(os.path.dirname(__file__), "data", "model")
+        model_slug = model_name.split("/")[-1]
+        self.local_model_path = os.path.join(os.path.dirname(__file__), "data", "model", model_slug)
         
         # Determine best available device
         if torch.cuda.is_available():
