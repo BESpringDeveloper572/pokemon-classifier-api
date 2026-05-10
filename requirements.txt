@@ -7,3 +7,5 @@ python-multipart>=0.0.9
 python-dotenv>=1.0.1
 
 requests
+rembg>=2.0.50
+onnxruntime>=1.17.0

@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, UploadFile, File, HTTPException, Header, Depends, Response
 from fastapi.security import APIKeyHeader
 
+from rembg import remove
 from .model import pokemon_classifier
 from .repository import get_pokemon_repository, PokemonRepository
 from .utils import tile_image_for_3ds
@@ -132,10 +133,8 @@ async def classify_image(
         is_3ds = user_agent and "3DS" in user_agent.upper()
         
         # Validation and processing logic...
-        # (Keeping the original complex 3DS raw buffer decoding from main.py)
         try:
             image = Image.open(io.BytesIO(content))
-            image = image.convert("RGB")
         except (UnidentifiedImageError, ValueError):
             size = len(content)
             if size == 192000: # 240x400 RGB565
@@ -150,6 +149,19 @@ async def classify_image(
                 image = Image.frombytes("RGB", (240, 400), bytes(rgb_data)).rotate(90, expand=True)
             else:
                 raise HTTPException(status_code=400, detail="Invalid image")
+
+        # Remove background using rembg
+        try:
+            image = remove(image)
+            # Composite onto white background to convert back to RGB
+            if image.mode == 'RGBA':
+                white_bg = Image.new("RGBA", image.size, (255, 255, 255, 255))
+                image = Image.alpha_composite(white_bg, image).convert("RGB")
+            else:
+                image = image.convert("RGB")
+        except Exception as rb_err:
+            logger.error(f"Rembg error: {rb_err}")
+            image = image.convert("RGB") # Fallback to original image if rembg fails
 
         predictions = pokemon_classifier.predict(image, top_k=1)
         if not predictions:
