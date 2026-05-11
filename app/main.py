@@ -8,8 +8,8 @@ from PIL import Image, UnidentifiedImageError
 from dotenv import load_dotenv
 from fastapi import FastAPI, UploadFile, File, HTTPException, Header, Depends, Response
 from fastapi.security import APIKeyHeader
-
 from rembg import remove
+
 from .model import pokemon_classifier
 from .repository import get_pokemon_repository, PokemonRepository
 from .utils import tile_image_for_3ds
@@ -131,13 +131,11 @@ async def classify_image(
              raise HTTPException(status_code=400, detail="File too large.")
 
         is_3ds = user_agent and "3DS" in user_agent.upper()
-        
+
         # Validation and processing logic...
-        try:
-            image = Image.open(io.BytesIO(content))
-        except (UnidentifiedImageError, ValueError):
+        if is_3ds:
             size = len(content)
-            if size == 192000: # 240x400 RGB565
+            if size == 192000:  # 240x400 RGB565
                 rgb_data = bytearray(400 * 240 * 3)
                 for x in range(240):
                     for y in range(400):
@@ -147,7 +145,10 @@ async def classify_image(
                         rgb_data[(y * 240 + x) * 3 + 1] = ((word >> 5) & 0x3F) << 2
                         rgb_data[(y * 240 + x) * 3 + 2] = (word & 0x1F) << 3
                 image = Image.frombytes("RGB", (240, 400), bytes(rgb_data)).rotate(90, expand=True)
-            else:
+        else:
+            try:
+                image = Image.open(io.BytesIO(content))
+            except (UnidentifiedImageError, ValueError):
                 raise HTTPException(status_code=400, detail="Invalid image")
 
         # Remove background using rembg

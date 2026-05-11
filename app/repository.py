@@ -17,7 +17,7 @@ class PokemonRepository(Protocol):
     def get_all_names(self) -> List[str]:
         ...
 
-class LocalJsonFilePokemonRepository:
+class LocalJsonFilePokemonRepository(PokemonRepository):
     """JSON-based implementation of the PokemonRepository."""
     def __init__(self, file_path: str):
         self.file_path = file_path
