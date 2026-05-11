@@ -146,10 +146,13 @@ async def classify_image(
                         rgb_data[(y * 240 + x) * 3 + 2] = (word & 0x1F) << 3
                 image = Image.frombytes("RGB", (240, 400), bytes(rgb_data)).rotate(90, expand=True)
         else:
-            try:
-                image = Image.open(io.BytesIO(content))
-            except (UnidentifiedImageError, ValueError):
-                raise HTTPException(status_code=400, detail="Invalid image")
+            if not validate_image_header(content):
+                raise HTTPException(status_code=400, detail="Invalid image type")
+            else:
+                try:
+                    image = Image.open(io.BytesIO(content))
+                except (UnidentifiedImageError, ValueError):
+                    raise HTTPException(status_code=400, detail="Invalid image content")
 
         # Remove background using rembg
         try:
