@@ -9,3 +9,4 @@ python-dotenv>=1.0.1
 requests
 rembg>=2.0.50
 onnxruntime>=1.17.0
+google-cloud-vision>=3.7.2

@@ -10,7 +10,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException, Header, Depends, R
 from fastapi.security import APIKeyHeader
 from rembg import remove
 
-from .model import pokemon_classifier
+from .model import PokemonClassifier
 from .repository import get_pokemon_repository, PokemonRepository
 from .utils import tile_image_for_3ds
 
@@ -31,6 +31,10 @@ api_key_header = APIKeyHeader(name="X-API-KEY", auto_error=False)
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB limit
 # Initialize Repository
 pokemon_repo: PokemonRepository = get_pokemon_repository()
+
+# Initialize Classifier
+DEFAULT_MODEL_NAME = os.getenv("MODEL_NAME", "skshmjn/Pokemon-classifier-gen9-1025")
+pokemon_classifier = PokemonClassifier(model_name=DEFAULT_MODEL_NAME)
 
 def verify_api_key(
     x_api_key: str = Depends(api_key_header)

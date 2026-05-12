@@ -4,9 +4,11 @@ from PIL import Image
 import torch
 
 class PokemonClassifier:
-    def __init__(self, model_name="skshmjn/Pokemon-classifier-gen9-1025"):
+    def __init__(self, model_name: str):
+        if not model_name:
+            raise ValueError("model_name must be provided to PokemonClassifier")
         self.hub_model_name = model_name
-        model_slug = model_name.split("/")[-1]
+        model_slug = self.hub_model_name.split("/")[-1]
         self.local_model_path = os.path.join(os.path.dirname(__file__), "data", "model", model_slug)
         
         # Determine best available device
@@ -56,6 +58,3 @@ class PokemonClassifier:
         if os.path.exists(self.local_model_path):
             return f"Local ({self.local_model_path})"
         return f"Hub ({self.hub_model_name})"
-
-# Singleton instance for the app
-pokemon_classifier = PokemonClassifier()
