@@ -50,10 +50,9 @@ class PokemonBase:
         try:
             p = pb.pokemon(name_lower)
             types = [t.type.name.capitalize() for t in p.types]
-            species_data = p.species
-            species_name = species_data.name.capitalize()
-            
             s = pb.pokemon_species(name_lower)
+            species_name = next((g for g in s.genera if g.language.name == "en"), None).genus
+
             english_entries = [
                 entry.flavor_text.replace("\n", " ").replace("\f", " ")
                 for entry in s.flavor_text_entries
