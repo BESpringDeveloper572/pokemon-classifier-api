@@ -42,8 +42,7 @@ api_key_header = APIKeyHeader(name="X-API-KEY", auto_error=False)
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB limit
 
 # Initialize Data Access
-data_path = os.path.join(os.path.dirname(__file__), "data", "pokemon_names.csv")
-pokemon_repo = PokemonBase(data_path)
+pokemon_repo = PokemonBase()
 
 # Initialize Classifier
 DEFAULT_MODEL_NAME = os.getenv("MODEL_NAME", "skshmjn/Pokemon-classifier-gen9-1025")

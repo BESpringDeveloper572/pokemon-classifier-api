@@ -1,12 +1,14 @@
-import csv
 import os
 import random
+import logging
 from typing import List, Optional, Dict, Any
 
 import pokebase as pb
 
+logger = logging.getLogger(__name__)
+
 class PokemonBase:
-    """CSV-based data access with Pokebase enrichment."""
+    """Dynamic data access using Pokebase."""
     GEN_TO_REGION = {
         "generation-i": "Kanto",
         "generation-ii": "Johto",
@@ -19,23 +21,27 @@ class PokemonBase:
         "generation-ix": "Paldea"
     }
 
-    def __init__(self, file_path: str):
-        self.file_path = file_path
+    def __init__(self):
         self._names: List[str] = []
         self._load_data()
 
     def _load_data(self):
-        """Loads names from the CSV file."""
-        if os.path.exists(self.file_path):
-            with open(self.file_path, "r", newline='', encoding='utf-8') as f:
-                reader = csv.DictReader(f)
-                self._names = [row["name"] for row in reader if "name" in row]
+        """Loads names from PokéAPI."""
+        try:
+            logger.info("Fetching Pokémon names from PokéAPI...")
+            # APIResourceList handles pagination and caching automatically
+            self._names = [p['name'].capitalize() for p in pb.APIResourceList('pokemon')]
+            logger.info(f"Successfully loaded {len(self._names)} names from PokéAPI.")
+        except Exception as e:
+            logger.error(f"Failed to fetch names from PokéAPI: {e}")
+            raise RuntimeError("Could not initialize Pokémon name list") from e
 
     def get_by_name(self, name: str) -> Optional[Dict[str, Any]]:
         """
         Retrieves Pokemon info by name, enriched via pokebase.
         """
         name_lower = name.lower()
+        # Verify it's a known pokemon name (case-insensitive check)
         matched_name = next((n for n in self._names if n.lower() == name_lower), None)
         
         if not matched_name:
@@ -68,7 +74,8 @@ class PokemonBase:
                 "weight": p.weight / 10.0,
                 "region": region
             }
-        except Exception:
+        except Exception as e:
+            logger.error(f"Error enriching data for {name_lower}: {e}")
             return {"name": matched_name}
 
     def get_all_names(self) -> List[str]:
