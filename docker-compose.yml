@@ -1,0 +1,39 @@
+services:
+  pokemon-api:
+    build: .
+    image: pokemon-classifier-api:latest
+    container_name: pokemon-api
+    restart: unless-stopped
+    environment:
+      - POKEMON_API_KEY=${POKEMON_API_KEY:-CHANGEME_PLEASE}
+      - MODEL_NAME=${MODEL_NAME:-skshmjn/Pokemon-classifier-gen9-1025}
+    # Port 8000 is NOT exposed to the host for maximum security. 
+    # Only zrok can see it inside this network.
+
+  zrok:
+    image: openziti/zrok:latest
+    container_name: zrok-share
+    restart: unless-stopped
+    volumes:
+      # Map host's zrok config to the container's zrok user home (ziggy)
+      - ${HOME}/.zrok:/home/ziggy/.zrok
+    environment:
+      - ZROK_ENABLE_TOKEN=${ZROK_ENABLE_TOKEN}
+      - HOME=/home/ziggy
+    tty: true
+    stdin_open: true
+    entrypoint: ""
+    command: |
+      bash -c "
+      if [ ! -d /home/ziggy/.zrok/identities ]; then
+        echo 'Initializing zrok environment...'
+        zrok enable ${ZROK_ENABLE_TOKEN}
+      fi
+      zrok share reserved pokemonapi --headless
+      "
+    depends_on:
+      - pokemon-api
+
+networks:
+  default:
+    name: pokemon-net

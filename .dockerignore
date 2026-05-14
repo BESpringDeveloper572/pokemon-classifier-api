@@ -1,0 +1,16 @@
+.venv
+.git
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.db
+.DS_Store
+.idea
+.vscode
+app/data/model/*
+app/data/cache/*
+temp.jpg
+debug.jpg
+debug_ris.py
+scripts/test_pokemon_info.json
