@@ -69,8 +69,8 @@ class PokemonBase:
                 "types": types,
                 "description": description,
                 "species": species_name,
-                "height": p.height / 10.0,
-                "weight": p.weight / 10.0,
+                "height": p.height,
+                "weight": p.weight,
                 "region": region
             }
         except Exception as e:
