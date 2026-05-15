@@ -8,7 +8,6 @@ __pycache__
 .DS_Store
 .idea
 .vscode
-app/data/model/*
 app/data/cache/*
 temp.jpg
 debug.jpg
