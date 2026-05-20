@@ -1,5 +1,5 @@
 from PIL import Image
-import io
+
 
 def tile_image_for_3ds(img: Image.Image) -> bytes:
     """

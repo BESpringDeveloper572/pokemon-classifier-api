@@ -1,7 +1,9 @@
 import os
-from transformers import pipeline
-from PIL import Image
+
 import torch
+from PIL import Image
+from transformers import pipeline
+
 
 class PokemonClassifier:
     def __init__(self, model_name: str):

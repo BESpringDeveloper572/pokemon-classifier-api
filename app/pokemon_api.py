@@ -1,7 +1,6 @@
-import os
-import random
 import logging
-from typing import List, Optional, Dict, Any
+import random
+from typing import Any
 
 import pokebase as pb
 
@@ -22,7 +21,7 @@ class PokemonBase:
     }
 
     def __init__(self):
-        self._names: List[str] = []
+        self._names : set[str] = set()
         self._load_data()
 
     def _load_data(self):
@@ -36,7 +35,7 @@ class PokemonBase:
             logger.error(f"Failed to fetch names from PokéAPI: {e}")
             raise RuntimeError("Could not initialize Pokémon name list") from e
 
-    def get_by_name(self, name: str) -> Optional[Dict[str, Any]]:
+    def get_by_name(self, name: str) -> dict[str, Any] | None:
         """
         Retrieves Pokemon info by name, enriched via pokebase.
         """
@@ -77,5 +76,5 @@ class PokemonBase:
             logger.error(f"Error enriching data for {name_lower}: {e}")
             return {"name": matched_name}
 
-    def get_all_names(self) -> List[str]:
+    def get_all_names(self) -> set[str]:
         return self._names

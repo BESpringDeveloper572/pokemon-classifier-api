@@ -1,6 +1,7 @@
-import requests
 import json
-import os
+
+import requests
+
 
 def test_fetch(output_file="test_pokemon_info.json"):
     base_url = "https://pokeapi.co/api/v2/pokemon/"

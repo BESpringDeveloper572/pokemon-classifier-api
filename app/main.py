@@ -1,7 +1,7 @@
 import io
 import logging
 import os
-from typing import Annotated, List, Optional
+from typing import Annotated
 
 import requests
 from PIL import Image, UnidentifiedImageError
@@ -27,13 +27,13 @@ load_dotenv()
 # --- SCHEMA ---
 class PokemonSchema(BaseModel):
     name: str
-    id: Optional[int] = None
-    types: Optional[List[str]] = None
-    description: Optional[str] = None
-    species: Optional[str] = None
-    height: Optional[float] = None
-    weight: Optional[float] = None
-    region: Optional[str] = None
+    id: int | None = None
+    types: list[str] | None = None
+    description: str | None = None
+    species: str | None = None
+    height: float | None = None
+    weight: float | None = None
+    region: str | None = None
 
 # --- CONFIGURATION & SECURITY ---
 API_KEY = os.getenv("POKEMON_API_KEY", "CHANGEME_PLEASE")
