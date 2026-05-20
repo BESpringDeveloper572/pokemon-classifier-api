@@ -39,6 +39,11 @@ class PokemonSchema(BaseModel):
 API_KEY = os.getenv("POKEMON_API_KEY", "CHANGEME_PLEASE")
 api_key_header = APIKeyHeader(name="X-API-KEY", auto_error=False)
 
+COMMON_RESPONSES = {
+    401: {"description": "Unauthorized: Missing X-API-KEY header."},
+    403: {"description": "Forbidden: Invalid API Key."},
+}
+
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB limit
 
 # Initialize Data Access
@@ -75,7 +80,7 @@ app = FastAPI(
 
 # --- ROUTES ---
 
-@app.get("/")
+@app.get("/", responses=COMMON_RESPONSES)
 async def root():
     return {
         "message": "Welcome to the Pokémon Classifier API!",
@@ -84,14 +89,14 @@ async def root():
         "metadata_loaded": len(pokemon_repo.get_all_names()) > 0
     }
 
-@app.get("/pokemon/{name}", response_model=PokemonSchema)
+@app.get("/pokemon/{name}", response_model=PokemonSchema, responses={**COMMON_RESPONSES, 404: {"description": "Pokemon not found"}})
 async def get_pokemon_by_name(name: str):
     info = pokemon_repo.get_by_name(name)
     if info:
         return info
     raise HTTPException(status_code=404, detail="Pokemon not found")
 
-@app.get("/pokemon/{name}/sprite")
+@app.get("/pokemon/{name}/sprite", responses={**COMMON_RESPONSES, 404: {"description": "Sprite not found"}, 500: {"description": "Error processing sprite"}})
 async def get_pokemon_sprite(name: str, size: int = 64):
     info = pokemon_repo.get_by_name(name)
     if not info or not info.get("id"):
@@ -123,7 +128,7 @@ async def get_pokemon_sprite(name: str, size: int = 64):
         logger.error(f"Error processing sprite: {e}")
         raise HTTPException(status_code=500, detail="Error processing sprite")
 
-@app.post("/classify", response_model=PokemonSchema)
+@app.post("/classify", response_model=PokemonSchema, responses={**COMMON_RESPONSES, 400: {"description": "Invalid input (size or format)"}, 404: {"description": "Could not classify image"}, 500: {"description": "Internal server error during classification"}})
 async def classify_image(
     file: Annotated[UploadFile, File(...)],
     user_agent: Annotated[str | None, Header()] = None

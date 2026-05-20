@@ -29,7 +29,7 @@ class PokemonBase:
         try:
             logger.info("Fetching Pokémon names from PokéAPI...")
             # APIResourceList handles pagination and caching automatically
-            self._names = [p['name'].capitalize() for p in pb.APIResourceList('pokemon')]
+            self._names = {p['name'].capitalize() for p in pb.APIResourceList('pokemon')}
             logger.info(f"Successfully loaded {len(self._names)} names from PokéAPI.")
         except Exception as e:
             logger.error(f"Failed to fetch names from PokéAPI: {e}")
