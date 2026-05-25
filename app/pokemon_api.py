@@ -1,5 +1,7 @@
 import logging
 import random
+import os
+import csv
 from typing import Any
 
 import pokebase as pb
@@ -22,18 +24,30 @@ class PokemonBase:
 
     def __init__(self):
         self._names : set[str] = set()
+        self._phonetics : dict[str, str] = {}
         self._load_data()
 
     def _load_data(self):
-        """Loads names from PokéAPI."""
+        """Loads names and phonetics from local CSV."""
+        csv_path = os.path.join(os.path.dirname(__file__), "data", "pokemon_tts_phonetics.csv")
+        if not os.path.exists(csv_path):
+            logger.error(f"Required phonetics CSV not found at {csv_path}")
+            raise FileNotFoundError(f"Could not find {csv_path}")
+
         try:
-            logger.info("Fetching Pokémon names from PokéAPI...")
-            # APIResourceList handles pagination and caching automatically
-            self._names = {p['name'].capitalize() for p in pb.APIResourceList('pokemon')}
-            logger.info(f"Successfully loaded {len(self._names)} names from PokéAPI.")
+            logger.info(f"Loading Pokémon data from {csv_path}...")
+            with open(csv_path, mode='r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    name = row['Name']
+                    phonetic = row['Phonetic_TTS']
+                    
+                    self._names.add(name.capitalize())
+                    self._phonetics[name.lower()] = phonetic
+            logger.info(f"Successfully loaded {len(self._names)} Pokémon from CSV.")
         except Exception as e:
-            logger.error(f"Failed to fetch names from PokéAPI: {e}")
-            raise RuntimeError("Could not initialize Pokémon name list") from e
+            logger.error(f"Error loading Pokémon CSV: {e}")
+            raise RuntimeError("Could not initialize Pokémon data from CSV") from e
 
     def get_by_name(self, name: str) -> dict[str, Any] | None:
         """
@@ -45,6 +59,12 @@ class PokemonBase:
         
         if not matched_name:
             return None
+
+        # Base info including phonetic if available
+        result = {
+            "name": matched_name,
+            "pronunciation": self._phonetics.get(name_lower),
+        }
 
         try:
             p = pb.pokemon(name_lower)
@@ -62,19 +82,19 @@ class PokemonBase:
             gen_name = s.generation.name
             region = self.GEN_TO_REGION.get(gen_name, "Unknown")
             
-            return {
+            result.update({
                 "id": p.id,
-                "name": matched_name,
                 "types": types,
                 "description": description,
                 "species": species_name,
                 "height": p.height,
                 "weight": p.weight,
                 "region": region
-            }
+            })
+            return result
         except Exception as e:
             logger.error(f"Error enriching data for {name_lower}: {e}")
-            return {"name": matched_name}
+            return result
 
     def get_all_names(self) -> set[str]:
         return self._names

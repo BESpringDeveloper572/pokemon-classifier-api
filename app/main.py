@@ -28,6 +28,7 @@ load_dotenv()
 class PokemonSchema(BaseModel):
     name: str
     id: int | None = None
+    pronunciation: str | None = None
     types: list[str] | None = None
     description: str | None = None
     species: str | None = None

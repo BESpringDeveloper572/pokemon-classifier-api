@@ -30,7 +30,7 @@ def test_invalid_magic_number():
     files = {"file": ("test.jpg", content, "image/jpeg")}
     response = client.post("/classify", headers=headers, files=files)
     assert response.status_code == 400
-    assert "Invalid image format" in response.json()["detail"]
+    assert "Invalid image type" in response.json()["detail"]
     print("Invalid magic number test passed!")
 
 def test_large_file():
